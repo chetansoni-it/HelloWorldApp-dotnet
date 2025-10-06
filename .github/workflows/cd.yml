@@ -28,3 +28,7 @@ jobs:
         echo "Deploying to ${{ github.event.inputs.environment }} server..."
         # Example using SSH
         scp -r ./publish/* user@your-server-ip:/var/www/helloworld
+
+    - name: Download artifact from release
+      run: |
+        gh release download dev-latest --dir ./publish
