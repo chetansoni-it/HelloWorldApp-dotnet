@@ -1,0 +1,30 @@
+name: CD - Deploy using last artifact
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: choice
+        options:
+          - dev
+          - uat
+          - prod
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Download last artifact
+      uses: actions/download-artifact@v4
+      with:
+        name: hello-world-app
+        path: ./publish
+
+    - name: Deploy to Server
+      run: |
+        echo "Deploying to ${{ github.event.inputs.environment }} server..."
+        # Example using SSH
+        scp -r ./publish/* user@your-server-ip:/var/www/helloworld
