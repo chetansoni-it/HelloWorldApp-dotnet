@@ -21,41 +21,41 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
-    - name: Setup GitHub CLI
-      uses: cli/cli-action@v2
-      with:
-        version: latest
+      - name: Setup GitHub CLI
+        uses: cli/cli@v2
+        with:
+          version: latest
 
-    - name: Download artifact from last release
-      run: |
-        echo "Downloading release artifact for environment: ${{ github.event.inputs.environment }}"
+      - name: Download artifact from last release
+        run: |
+          echo "Downloading release artifact for environment: ${{ github.event.inputs.environment }}"
 
-        # Pick the release tag based on environment
-        if [ "${{ github.event.inputs.environment }}" = "dev" ]; then
-          TAG="dev-latest"
-        elif [ "${{ github.event.inputs.environment }}" = "uat" ]; then
-          TAG="uat-latest"
-        elif [ "${{ github.event.inputs.environment }}" = "prod" ]; then
-          TAG="prod-latest"
-        else
-          echo "Invalid environment input!"
-          exit 1
-        fi
+          # Pick the release tag based on environment
+          if [ "${{ github.event.inputs.environment }}" = "dev" ]; then
+            TAG="dev-latest"
+          elif [ "${{ github.event.inputs.environment }}" = "uat" ]; then
+            TAG="uat-latest"
+          elif [ "${{ github.event.inputs.environment }}" = "prod" ]; then
+            TAG="prod-latest"
+          else
+            echo "Invalid environment input!"
+            exit 1
+          fi
 
-        echo "Fetching release with tag: $TAG"
-        gh release download "$TAG" --dir ./publish --repo ${{ github.repository }}
+          echo "Fetching release with tag: $TAG"
+          gh release download "$TAG" --dir ./publish --repo ${{ github.repository }}
 
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-    - name: Deploy to target server
-      run: |
-        echo "Deploying to ${{ github.event.inputs.environment }} server..."
-        # Example SSH deployment (replace with your real credentials/target)
-        scp -r ./publish/* user@your-server-ip:/var/www/helloworld-${{ github.event.inputs.environment }}
+      - name: Deploy to target server
+        run: |
+          echo "Deploying to ${{ github.event.inputs.environment }} server..."
+          # Example SSH deployment (replace with your real credentials/target)
+          scp -r ./publish/* user@your-server-ip:/var/www/helloworld-${{ github.event.inputs.environment }}
 
-      env:
-        SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+        env:
+          SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
