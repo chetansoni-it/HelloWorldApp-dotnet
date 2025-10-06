@@ -44,5 +44,7 @@ jobs:
         tag_name: dev-latest
         name: Dev Build
         files: ./publish/**
+        overwrite: true          # ✅ allow overwriting same assets on rerun
+        generate_release_notes: true
       env:
         GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}

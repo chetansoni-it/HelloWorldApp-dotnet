@@ -1,4 +1,4 @@
-name: CD - Deploy using last artifact
+name: CD - Deploy using last release artifact
 
 on:
   workflow_dispatch:
@@ -12,23 +12,50 @@ on:
           - uat
           - prod
 
+permissions:
+  contents: read    # required for downloading release assets
+  id-token: write   # optional for future OIDC auth (e.g., cloud deploys)
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Download last artifact
-      uses: actions/download-artifact@v4
-      with:
-        name: hello-world-app
-        path: ./publish
+    - name: Checkout repo
+      uses: actions/checkout@v4
 
-    - name: Deploy to Server
+    - name: Setup GitHub CLI
+      uses: cli/cli-action@v2
+      with:
+        version: latest
+
+    - name: Download artifact from last release
+      run: |
+        echo "Downloading release artifact for environment: ${{ github.event.inputs.environment }}"
+
+        # Pick the release tag based on environment
+        if [ "${{ github.event.inputs.environment }}" = "dev" ]; then
+          TAG="dev-latest"
+        elif [ "${{ github.event.inputs.environment }}" = "uat" ]; then
+          TAG="uat-latest"
+        elif [ "${{ github.event.inputs.environment }}" = "prod" ]; then
+          TAG="prod-latest"
+        else
+          echo "Invalid environment input!"
+          exit 1
+        fi
+
+        echo "Fetching release with tag: $TAG"
+        gh release download "$TAG" --dir ./publish --repo ${{ github.repository }}
+
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+    - name: Deploy to target server
       run: |
         echo "Deploying to ${{ github.event.inputs.environment }} server..."
-        # Example using SSH
-        scp -r ./publish/* user@your-server-ip:/var/www/helloworld
+        # Example SSH deployment (replace with your real credentials/target)
+        scp -r ./publish/* user@your-server-ip:/var/www/helloworld-${{ github.event.inputs.environment }}
 
-    - name: Download artifact from release
-      run: |
-        gh release download dev-latest --dir ./publish
+      env:
+        SSH_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
