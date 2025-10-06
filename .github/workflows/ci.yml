@@ -2,7 +2,10 @@ name: CI - Build and Publish Artifact
 
 on:
   push:
-    branches: [ "dev", "uat", "prod" ]
+    branches:
+      - dev
+      - uat
+      - prod
 
 permissions:
   contents: write
@@ -14,57 +17,57 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v4
-      with:
-        dotnet-version: '9.0.x'
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
 
-    - name: Restore dependencies
-      run: dotnet restore
+      - name: Restore dependencies
+        run: dotnet restore
 
-    - name: Build
-      run: dotnet build --configuration Release --no-restore
+      - name: Build
+        run: dotnet build --configuration Release --no-restore
 
-    - name: Publish
-      run: dotnet publish --configuration Release --output ./publish
+      - name: Publish
+        run: dotnet publish --configuration Release --output ./publish
 
-    # ✅ Compress all publish files into a single ZIP to keep release tidy
-    - name: Create ZIP Artifact
-      run: |
-        cd ./publish
-        zip -r ../hello-world-app.zip .
-        cd ..
+      # ✅ Compress all publish files into a single ZIP
+      - name: Create ZIP Artifact
+        run: |
+          cd ./publish
+          zip -r ../hello-world-app.zip .
+          cd ..
 
-    # ✅ Upload artifact for later CI/CD steps
-    - name: Upload Artifact
-      uses: actions/upload-artifact@v4
-      with:
-        name: hello-world-app
-        path: ./hello-world-app.zip
+      # ✅ Upload artifact for later CI/CD steps
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: hello-world-app
+          path: ./hello-world-app.zip
 
-    # ✅ Upload single zipped file to release - tag: dev-latest
-    - name: Upload to GitHub Release (dev-latest)
-      if: startsWith(github.ref, 'refs/heads/dev')
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: dev-latest
-        name: Dev Build (Latest)
-        files: ./hello-world-app.zip
-        generate_release_notes: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      # ✅ Upload single zipped file to GitHub Release (for dev branch)
+      - name: Upload to GitHub Release (dev-latest)
+        if: github.ref == 'refs/heads/dev'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev-latest
+          name: Dev Build (Latest)
+          files: ./hello-world-app.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
 
-    # ✅ Also create release tagged with commit SHA or PR number
-    - name: Upload to GitHub Release (dev-<PR or SHA>)
-      if: startsWith(github.ref, 'refs/heads/dev')
-      uses: softprops/action-gh-release@v2
-      with:
-        tag_name: dev-${{ github.event.pull_request.number || github.run_number }}
-        name: Dev Build ${{ github.event.pull_request.number && format('PR #{0}', github.event.pull_request.number) || format('Run #{0}', github.run_number) }}
-        files: ./hello-world-app.zip
-        generate_release_notes: false
-      env:
-        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+      # ✅ Also create unique release (per run or PR)
+      - name: Upload to GitHub Release (dev-<PR or SHA>)
+        if: github.ref == 'refs/heads/dev'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: dev-${{ github.event.pull_request.number || github.run_number }}
+          name: Dev Build ${{ github.event.pull_request.number && format('PR #{0}', github.event.pull_request.number) || format('Run #{0}', github.run_number) }}
+          files: ./hello-world-app.zip
+          generate_release_notes: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
