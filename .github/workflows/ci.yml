@@ -31,3 +31,11 @@ jobs:
       with:
         name: hello-world-app
         path: ./publish
+
+    - name: Upload to GitHub Release
+      uses: softprops/action-gh-release@v2
+      if: startsWith(github.ref, 'refs/heads/dev')
+      with:
+        tag_name: dev-latest
+        name: Dev Build
+        files: ./publish/**
