@@ -4,6 +4,11 @@ on:
   push:
     branches: [ "dev", "uat", "prod" ]
 
+permissions:
+  contents: write    # 👈 required for creating releases
+  id-token: write    # (optional, for OIDC deployments)
+  actions: read
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -39,3 +44,5 @@ jobs:
         tag_name: dev-latest
         name: Dev Build
         files: ./publish/**
+      env:
+        GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
