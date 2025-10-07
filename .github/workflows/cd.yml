@@ -24,10 +24,11 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v4
 
-      - name: Setup GitHub CLI
-        uses: cli/cli@v2
-        with:
-          version: latest
+      # # ✅ Install GitHub CLI
+      # - name: Setup GitHub CLI
+      #   uses: cli/cli@v2
+      #   with:
+      #     version: latest
 
       - name: Download artifact from last release
         run: |
